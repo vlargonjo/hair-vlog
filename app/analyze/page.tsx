@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { UploadSection } from "@/components/upload-section";
-import { HairResultCard } from "@/components/hair-result-card";
+import { UploadBox } from "./components/UploadBox";
+import { ResultCard } from "./components/ResultCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useHairStore } from "@/hooks/useHairStore";
@@ -20,51 +20,82 @@ export default function AnalyzePage() {
 
   const submitAnalysis = async () => {
     setLoading(true);
-    const response = await fetch("/api/hair/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ answers })
-    });
-    const data = await response.json();
-    setAnalysis(data);
-    setLoading(false);
+    try {
+      const response = await fetch("/api/hair/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers })
+      });
+      const data = await response.json();
+      setAnalysis(data);
+    } catch (error) {
+      console.error("Analysis error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-4xl font-semibold">Анализ волос</h1>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <UploadSection />
-        <Card>
-          <CardHeader>
-            <CardTitle>Тест-опросник</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {QUESTIONS.map((item) => (
-              <div key={item.id} className="space-y-2">
-                <p className="font-medium">{item.question}</p>
-                <div className="flex flex-wrap gap-2">
-                  {item.options.map((option) => (
-                    <button
-                      key={option}
-                      className={`rounded-full px-4 py-2 text-sm ${
-                        answers[item.id] === option ? "bg-brand text-white" : "bg-slate-100 text-slate-600"
-                      }`}
-                      onClick={() => setAnswers((prev) => ({ ...prev, [item.id]: option }))}
-                    >
-                      {option}
-                    </button>
-                  ))}
+    <div className="w-full border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+      <div className="container mx-auto max-w-7xl px-4 py-12 md:px-6 md:py-16">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-slate-100">
+            2D-анализ фото
+          </h1>
+          <p className="mt-2 text-lg text-slate-600 dark:text-slate-400">
+            Загрузите фото и пройдите тест для получения персональных рекомендаций
+          </p>
+        </div>
+
+        <div className="grid gap-8 lg:grid-cols-2">
+          <UploadBox />
+          
+          <Card className="border-slate-200 dark:border-slate-800">
+            <CardHeader>
+              <CardTitle>Тест-опросник</CardTitle>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                Ответьте на несколько вопросов для точного анализа
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {QUESTIONS.map((item) => (
+                <div key={item.id} className="space-y-3">
+                  <p className="font-medium text-slate-900 dark:text-slate-100">{item.question}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {item.options.map((option) => (
+                      <button
+                        key={option}
+                        className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                          answers[item.id] === option
+                            ? "bg-brand text-white shadow-sm"
+                            : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                        }`}
+                        onClick={() => setAnswers((prev) => ({ ...prev, [item.id]: option }))}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-            <Button onClick={submitAnalysis} disabled={loading} className="w-full">
-              {loading ? "Анализируем..." : "Получить результат"}
-            </Button>
-          </CardContent>
-        </Card>
+              ))}
+              <Button
+                onClick={submitAnalysis}
+                disabled={loading || Object.keys(answers).length < QUESTIONS.length}
+                className="w-full"
+                size="lg"
+              >
+                {loading ? "Анализируем..." : "Получить результат"}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {analysis && (
+          <div className="mt-8">
+            <ResultCard analysis={analysis} />
+          </div>
+        )}
       </div>
-      <HairResultCard analysis={analysis} />
     </div>
   );
 }

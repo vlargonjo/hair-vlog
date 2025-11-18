@@ -16,12 +16,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.className} antialiased`}>
         <ThemeProvider>
           <SupabaseProvider>
             <div className="flex min-h-screen flex-col">
               <Header />
-              <main className="container flex-1 py-10">{children}</main>
+              <main className="flex-1">
+                {children}
+              </main>
               <Footer />
             </div>
           </SupabaseProvider>
